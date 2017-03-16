@@ -180,10 +180,41 @@ void printCardInfo() {
   client.println(volumesize);
 
 
-//  client.println("\nFiles found on the card (name, date and size in bytes): ");
+  client.println("\nFiles found on the card (name, date and size in bytes): ");
+  File root = SD.open("/");
+  printDirectory(root,0);
+
 //  root.openRoot(volume);
 //
 //  // list all files in the card with date and size
 //  root.ls(LS_R | LS_DATE | LS_SIZE);
+}
+
+void printDirectory(File dir, int numTabs)
+{
+  while (true)
+  {
+    File entry = dir.openNextFile();
+    if (! entry)
+    {
+      if (numTabs == 0)
+        client.println("** Done **");
+      return;
+    }
+    for (uint8_t i = 0; i < numTabs; i++)
+      client.print('\t');
+    client.print(entry.name());
+    if (entry.isDirectory())
+    {
+      client.println("/");
+      printDirectory(entry, numTabs + 1);
+    }
+    else
+    {
+      client.print("\t\t");
+      client.println(entry.size(), DEC);
+    }
+    entry.close();
+  }
 }
 

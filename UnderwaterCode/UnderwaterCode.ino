@@ -191,6 +191,36 @@ void loop() {
             client.println("<br />");
           }
           client.println("</html>");
+
+          depthsensor.read();
+
+  client.print("\\\\\\Pressure: "); 
+  client.print(depthsensor.pressure()); 
+  client.println(" mbar ////////");
+  
+  client.print("\\\\\\\\ Temperature: "); 
+  client.print(depthsensor.temperature()); 
+  client.println(" deg C ////////");
+  
+  client.print("\\\\ Depth: "); 
+  client.print(depthsensor.depth()); 
+  client.println(" m//////");
+  
+  client.print("\\\\\\\\\\ Altitude: "); 
+  client.print(depthsensor.altitude()); 
+  client.println(" m above mean sea level/////////");
+
+  delay(1000);
+
+  tempsensor.read();
+ 
+  client.print("\\\\\\ Temperature: ");
+  client.print(tempsensor.temperature()); 
+  client.println("deg C///////");
+   
+  client.println("---");
+
+  delay(1000);
           break;
         }
         if (c == '\n') {
@@ -215,7 +245,6 @@ void loop() {
   
   delay(100);
 
-  
   }
 
 void printCardInfo() {

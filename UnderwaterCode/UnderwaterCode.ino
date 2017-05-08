@@ -24,9 +24,18 @@ SdFile root;
 
 #define cardSelect 4
 
-File logfile;
+// File logfile;
 
-void error(uint8_t errno) {
+int chipSelect = 4;
+File mySensorData;
+
+float temp;
+float temp1;
+float Pressure;
+float altitude;
+float depth;
+
+/*void error(uint8_t errno) {
   while(1) {
     uint8_t i;
     for (i=0; i<errno; i++) {
@@ -40,7 +49,7 @@ void error(uint8_t errno) {
     }
   }
 }
-
+*/
 
 void setup() {
   
@@ -54,7 +63,9 @@ void setup() {
   tempsensor.init();
   
   depthsensor.setFluidDensity(1029); // kg/m^3 (997 freshwater, 1029 for seawater)
+  SD.begin(chipSelect) ;
 
+  
   Serial.begin(115200);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
@@ -82,7 +93,7 @@ if (!card.init(SPI_HALF_SPEED, SD_CS)) {
   Serial.print("\nWeb server is ready....\n");
 
   
-  Serial.begin(115200);
+  /*Serial.begin(115200);
   Serial.println("\r\nAnalog logger test");
   pinMode(13, OUTPUT);
 
@@ -90,10 +101,11 @@ if (!card.init(SPI_HALF_SPEED, SD_CS)) {
   // see if the card is present and can be initialized:
   if (!SD.begin(cardSelect)) {
     Serial.println("Card init. failed!");
-    error(2);
+    error(2); 
+    */
 }
 
-
+/*
 char filename[15];
   strcpy(filename, "ANALOG00.TXT");
   for (uint8_t i = 0; i < 100; i++) {
@@ -104,7 +116,6 @@ char filename[15];
       break;
     }
   }
-
 
   logfile = SD.open(filename, FILE_WRITE);
   if( ! logfile ) {
@@ -122,9 +133,10 @@ char filename[15];
 
 uint8_t i=0;
 
+*/
  
 void loop() {
-
+/*
   depthsensor.read();
 
   Serial.print("Pressure: "); 
@@ -154,6 +166,78 @@ void loop() {
   Serial.println("---");
 
   delay(1000);
+
+*/
+//  writing data to the SD card
+temp=tempsensor.temperature();
+Pressure=depthsensor.pressure();
+temp1=depthsensor.temperature();
+depth=depthsensor.depth();
+altitude=depthsensor.altitude();
+
+mySensorData= SD.open("Data.txt", FILE_WRITE);
+
+if (mySensorData){
+  
+  Serial.print("Temperature(temperature sensor): ");
+  Serial.print(temp); 
+  Serial.println(" deg C");
+  Serial.println("---");
+
+
+  Serial.print("Pressure: "); 
+  Serial.print(Pressure); 
+  Serial.println(" mbar");
+  
+  Serial.print("Temperature(pressure sensor): "); 
+  Serial.print(temp1); 
+  Serial.println(" deg C");
+  
+  Serial.print("Depth: "); 
+  Serial.print(depth); 
+  Serial.println(" m");
+  
+  Serial.print("Altitude: "); 
+  Serial.print(altitude); 
+  Serial.println(" m above mean sea level");
+
+  delay(1000);
+//write on SD card
+
+mySensorData.print("Temperature(temperature sensor): ");
+  mySensorData.print(temp); 
+  mySensorData.println(" deg C");
+  mySensorData.println("---");
+
+
+  mySensorData.print("Pressure: "); 
+  mySensorData.print(Pressure); 
+  mySensorData.println(" mbar");
+  
+  mySensorData.print("Temperature(pressure sensor): "); 
+  mySensorData.print(temp1); 
+  mySensorData.println(" deg C");
+  
+  mySensorData.print("Depth: "); 
+  mySensorData.print(depth); 
+  mySensorData.println(" m");
+  
+ mySensorData.print("Altitude: "); 
+  mySensorData.print(altitude); 
+  mySensorData.println(" m above mean sea level");
+
+  digitalWrite(8,HIGH);
+  delay(100);
+  digitalWrite(8,LOW);
+  delay(100);
+  
+  mySensorData.close();
+
+  
+}
+else{
+  Serial.println("unable to store data in SD card");
+}
 
   // listen for incoming clients
   EthernetClient client = server.available();
@@ -238,13 +322,15 @@ void loop() {
     client.stop();
     Serial.println("client disconnected");
   }
+  
+  /*
   digitalWrite(8, HIGH);
   logfile.print("A0 = "); logfile.println(analogRead(0));
   Serial.print("A0 = "); Serial.println(analogRead(0));
   digitalWrite(8, LOW);
   
   delay(100);
-
+*/
   }
 
 void printCardInfo() {

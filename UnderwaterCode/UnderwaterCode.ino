@@ -12,7 +12,7 @@ TSYS01 tempsensor;
 
 byte mac[ ] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 
-IPAddress ip(192, 168, 0, 2);
+IPAddress ip(192, 168, 13, 42);
 EthernetServer server(80);
 EthernetClient client;
   #define WIZ_CS 10
@@ -73,7 +73,7 @@ void setup() {
 
   Serial.print("Hello, I am the Ethernet Featherwing!\n");
 
-if (!card.init(SPI_HALF_SPEED, SD_CS)) {
+  if (!card.init(SPI_HALF_SPEED, SD_CS)) {
     Serial.println("Failed to initialize SD card");
     //error(2);
   }
@@ -136,9 +136,11 @@ uint8_t i=0;
 */
  
 void loop() {
-/*
-  depthsensor.read();
 
+  depthsensor.read();
+  tempsensor.read();
+
+/*
   Serial.print("Pressure: "); 
   Serial.print(depthsensor.pressure()); 
   Serial.println(" mbar");
@@ -157,7 +159,7 @@ void loop() {
 
   delay(1000);
 
-  tempsensor.read();
+
  
   Serial.print("Temperature: ");
   Serial.print(tempsensor.temperature()); 
@@ -175,10 +177,7 @@ temp1=depthsensor.temperature();
 depth=depthsensor.depth();
 altitude=depthsensor.altitude();
 
-mySensorData= SD.open("Data.txt", FILE_WRITE);
-
-if (mySensorData){
-  
+ 
   Serial.print("Temperature(temperature sensor): ");
   Serial.print(temp); 
   Serial.println(" deg C");
@@ -201,8 +200,12 @@ if (mySensorData){
   Serial.print(altitude); 
   Serial.println(" m above mean sea level");
 
-  delay(1000);
-//write on SD card
+  //delay(1000);
+  //write on SD card
+
+mySensorData= SD.open("Data.txt", FILE_WRITE);
+
+if (mySensorData){
 
 mySensorData.print("Temperature(temperature sensor): ");
   mySensorData.print(temp); 

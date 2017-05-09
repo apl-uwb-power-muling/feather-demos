@@ -15,7 +15,7 @@ byte mac[ ] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 IPAddress ip(192, 168, 13, 42);
 EthernetServer server(80);
 EthernetClient client;
-  #define WIZ_CS 10
+#define WIZ_CS 10
 #define SD_CS 4
 
 Sd2Card card;
@@ -170,19 +170,18 @@ void loop() {
   delay(1000);
 
 */
-//  writing data to the SD card
-temp=tempsensor.temperature();
-Pressure=depthsensor.pressure();
-temp1=depthsensor.temperature();
-depth=depthsensor.depth();
-altitude=depthsensor.altitude();
+  //  writing data to the SD card
+  temp=tempsensor.temperature();
+  Pressure=depthsensor.pressure();
+  temp1=depthsensor.temperature();
+  depth=depthsensor.depth();
+  altitude=depthsensor.altitude();
 
  
   Serial.print("Temperature(temperature sensor): ");
   Serial.print(temp); 
   Serial.println(" deg C");
   Serial.println("---");
-
 
   Serial.print("Pressure: "); 
   Serial.print(Pressure); 
@@ -202,45 +201,45 @@ altitude=depthsensor.altitude();
 
   //delay(1000);
   //write on SD card
-
-mySensorData= SD.open("Data.txt", FILE_WRITE);
-
-if (mySensorData){
-
-mySensorData.print("Temperature(temperature sensor): ");
-  mySensorData.print(temp); 
-  mySensorData.println(" deg C");
-  mySensorData.println("---");
-
-
-  mySensorData.print("Pressure: "); 
-  mySensorData.print(Pressure); 
-  mySensorData.println(" mbar");
   
-  mySensorData.print("Temperature(pressure sensor): "); 
-  mySensorData.print(temp1); 
-  mySensorData.println(" deg C");
+  mySensorData= SD.open("Data.txt", FILE_WRITE);
   
-  mySensorData.print("Depth: "); 
-  mySensorData.print(depth); 
-  mySensorData.println(" m");
+  if (mySensorData){
   
- mySensorData.print("Altitude: "); 
-  mySensorData.print(altitude); 
-  mySensorData.println(" m above mean sea level");
+    mySensorData.print("Temperature(temperature sensor): ");
+    mySensorData.print(temp); 
+    mySensorData.println(" deg C");
+    mySensorData.println("---");
+  
+  
+    mySensorData.print("Pressure: "); 
+    mySensorData.print(Pressure); 
+    mySensorData.println(" mbar");
+    
+    mySensorData.print("Temperature(pressure sensor): "); 
+    mySensorData.print(temp1); 
+    mySensorData.println(" deg C");
+    
+    mySensorData.print("Depth: "); 
+    mySensorData.print(depth); 
+    mySensorData.println(" m");
+    
+    mySensorData.print("Altitude: "); 
+    mySensorData.print(altitude); 
+    mySensorData.println(" m above mean sea level");
 
-  digitalWrite(8,HIGH);
-  delay(100);
-  digitalWrite(8,LOW);
-  delay(100);
+//    digitalWrite(8,HIGH);
+//    delay(100);
+//    digitalWrite(8,LOW);
+//    delay(100);
+    
+    mySensorData.close();
   
-  mySensorData.close();
-
-  
-}
-else{
-  Serial.println("unable to store data in SD card");
-}
+    
+  }
+  else {
+    Serial.println("unable to store data in SD card");
+  }
 
   // listen for incoming clients
   EthernetClient client = server.available();
@@ -279,37 +278,38 @@ else{
           }
           client.println("</html>");
 
-          depthsensor.read();
+          //depthsensor.read();
 
-  client.print("\\\\\\Pressure: "); 
-  client.print(depthsensor.pressure()); 
-  client.println(" mbar ////////");
+          client.print("\\\\\\Pressure: "); 
+          client.print(depthsensor.pressure()); 
+          client.println(" mbar ////////");
   
-  client.print("\\\\\\\\ Temperature: "); 
-  client.print(depthsensor.temperature()); 
-  client.println(" deg C ////////");
+          client.print("\\\\\\\\ Temperature: "); 
+          client.print(depthsensor.temperature()); 
+          client.println(" deg C ////////");
   
-  client.print("\\\\ Depth: "); 
-  client.print(depthsensor.depth()); 
-  client.println(" m//////");
+          client.print("\\\\ Depth: "); 
+          client.print(depthsensor.depth()); 
+          client.println(" m//////");
   
-  client.print("\\\\\\\\\\ Altitude: "); 
-  client.print(depthsensor.altitude()); 
-  client.println(" m above mean sea level/////////");
+          client.print("\\\\\\\\\\ Altitude: "); 
+          client.print(depthsensor.altitude()); 
+          client.println(" m above mean sea level/////////");
 
-  delay(1000);
+          //delay(1000);
 
-  tempsensor.read();
+          //tempsensor.read();
  
-  client.print("\\\\\\ Temperature: ");
-  client.print(tempsensor.temperature()); 
-  client.println("deg C///////");
+          client.print("\\\\\\ Temperature: ");
+          client.print(tempsensor.temperature()); 
+          client.println("deg C///////");
    
-  client.println("---");
+          client.println("---");
 
-  delay(1000);
+          //delay(1000);
           break;
         }
+        
         if (c == '\n') {
           // you're starting a new line
           currentLineIsBlank = true;
@@ -325,16 +325,12 @@ else{
     client.stop();
     Serial.println("client disconnected");
   }
+
+
+  // One delay for the whole loop
+  delay(1000);
   
-  /*
-  digitalWrite(8, HIGH);
-  logfile.print("A0 = "); logfile.println(analogRead(0));
-  Serial.print("A0 = "); Serial.println(analogRead(0));
-  digitalWrite(8, LOW);
-  
-  delay(100);
-*/
-  }
+}
 
 void printCardInfo() {
     // print the type of card

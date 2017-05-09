@@ -408,7 +408,7 @@ void loop() {
             }
 
              //depthsensor.read();
-
+for (int datashow=0; datashow>=0; datashow++){
           client.print("\\\\\\Pressure: "); 
           client.print(depthsensor.pressure()); 
           client.println(" mbar ////////");
@@ -434,6 +434,9 @@ void loop() {
           client.println("deg C///////");
    
           client.println("---");
+
+          delay(1000);
+          }
 
             //client.println("<p>" + fakename + "</p></body></html>");
             break;

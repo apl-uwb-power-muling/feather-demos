@@ -67,7 +67,9 @@ void setup() {
 
   
   Serial.begin(115200);
-  while (!Serial) {
+  int count = 0;
+  const int SERIAL_TIMEOUT = 1000;
+  while (!Serial && count++ < SERIAL_TIMEOUT ) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 

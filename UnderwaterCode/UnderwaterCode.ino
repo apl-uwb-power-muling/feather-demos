@@ -58,7 +58,6 @@ float depth;
 void setup() {
   
   Serial.begin(9600);
-  
   Serial.println("Starting");
   
   Wire.begin();
@@ -228,7 +227,7 @@ void loop() {
   Serial.print(altitude); 
   Serial.println(" m above mean sea level");
 
-  //delay(1000);
+
   //write on SD card
   
   mySensorData= SD.open("Data.txt", FILE_WRITE);
@@ -400,45 +399,19 @@ void loop() {
             //delay(100);
             File s = SD.open(path);
             if (s) {
-              webprintDirectory(s);
+              if( s.isDirectory() ) {
+                webprintDirectory(s);
+                client.println("<hr>");
+                webprintSensors();         
+              } else {
+                webprintFile(s);
+              }
             } else {
-              client.println(s);
-              s.rewindDirectory();
+              client.println("Error opening " + path + " : " + s);     // AMM, I think this is an error condition, so print an error message
+              //s.rewindDirectory();                                   // AMM probably don't need this.
               s.close();
             }
 
-             //depthsensor.read();
-for (int datashow=0; datashow>=0; datashow++){
-          client.print("\\\\\\Pressure: "); 
-          client.print(depthsensor.pressure()); 
-          client.println(" mbar ////////");
-  
-          client.print("\\\\\\\\ Temperature: "); 
-          client.print(depthsensor.temperature()); 
-          client.println(" deg C ////////");
-  
-          client.print("\\\\ Depth: "); 
-          client.print(depthsensor.depth()); 
-          client.println(" m//////");
-  
-          client.print("\\\\\\\\\\ Altitude: "); 
-          client.print(depthsensor.altitude()); 
-          client.println(" m above mean sea level/////////");
-
-          //delay(1000);
-
-          //tempsensor.read();
- 
-          client.print("\\\\\\ Temperature: ");
-          client.print(tempsensor.temperature()); 
-          client.println("deg C///////");
-   
-          client.println("---");
-
-          delay(1000);
-          }
-
-            //client.println("<p>" + fakename + "</p></body></html>");
             break;
           }
         }
@@ -463,15 +436,13 @@ for (int datashow=0; datashow>=0; datashow++){
 //*/
 
 
-  
+  // AMM Put one master delay at the end so we don't record data too fast
+  delay(1000);
   
 }
 
 
-void webprintDirectory(File dir) {
-  //判断是否为文件
-  if (!dir.isDirectory()) {
-
+void webprintFile(File dir) {
     if (path.indexOf('.') != -1) {
       //获取后缀名
       http_header("200 OK", path.substring(path.indexOf('.') + 1));
@@ -479,17 +450,23 @@ void webprintDirectory(File dir) {
       http_header("200 OK", "txt");//文件没有后缀名 默认显示文本格式
     }
     //读文件
+
+    // AMM.  Changed this so it reads/writes multiple bytes at a time.  Should be much faster
+    const int BUFFER_LENGTH = 4096;
+    char buffer[BUFFER_LENGTH];
     while (dir.available()) {
-      char sc = dir.read();
-      client.print(sc);
+      int charsRead = dir.read(buffer, BUFFER_LENGTH );
+      client.write( buffer, charsRead );
     }
     dir.close();
-    dir.rewindDirectory();
     return;//退出
-  }
+}
+
+void webprintDirectory( File dir ) {
+
   //判断不是文件
   http_header("200 OK", "htm");
-  client.print("<!DOCTYPE HTML><html><body><h1>200 Success</h1><br />PATH:" + path + "<hr />");
+  client.print("<!DOCTYPE HTML><html><body><h1>Tian Rules!</h1><br />PATH:" + path + "<hr />");
   dir.rewindDirectory();//索引回到第一个位置
   while (true) {
     File entry =  dir.openNextFile();
@@ -518,7 +495,6 @@ void webprintDirectory(File dir) {
   }
   client.println("<p>" + fakename + "</p></body></html>");
   dir.close();
-  delay(200);
 }
 
 void http_header(String statuscode, String filetype) {
@@ -537,6 +513,35 @@ void http_header(String statuscode, String filetype) {
   client.println("Connection: close");
   client.println();
 }
+
+void webprintSensors() {
+
+//  AMM:  The way this is written, the program never gets out of this loop, it just keeps adding data to the web page.
+// By commenting out this for() statement, it shows the current data then finishes the web page
+//for (int datashow=0; datashow>=0; datashow++) {
+    client.print("<b>Pressure:</b> "); 
+    client.print(depthsensor.pressure()); 
+    client.println(" mbar <br/>");
+
+    client.print("<b>Temperature:</b> "); 
+    client.print(depthsensor.temperature()); 
+    client.println(" deg C<br/>");
+
+    client.print("<b>Depth:</b> "); 
+    client.print(depthsensor.depth()); 
+    client.println(" m<br/>");
+
+    client.print("<b>Altitude:</b> "); 
+    client.print(depthsensor.altitude()); 
+    client.println(" m above mean sea level<br/>");
+
+    client.print("<b>Temperature:</b> ");
+    client.print(tempsensor.temperature()); 
+    client.println("deg C<br/>");
+
+    client.println("<hr/>");
+}
+
 /*
 void printCardInfo() {
     // print the type of card

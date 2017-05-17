@@ -523,7 +523,7 @@ void webprintSensors() {
     client.print(depthsensor.pressure()); 
     client.println(" mbar <br/>");
 
-    client.print("<b>Temperature:</b> "); 
+    client.print("<b>Temperature from pressure sensor:</b> "); 
     client.print(depthsensor.temperature()); 
     client.println(" deg C<br/>");
 
@@ -533,95 +533,13 @@ void webprintSensors() {
 
     client.print("<b>Altitude:</b> "); 
     client.print(depthsensor.altitude()); 
-    client.println(" m above mean sea level<br/>");
+    client.println(" m above mean sea level<br/><br/>");
 
-    client.print("<b>Temperature:</b> ");
+    client.print("<b>Temperature sensor:</b> ");
     client.print(tempsensor.temperature()); 
     client.println("deg C<br/>");
 
     client.println("<hr/>");
 }
 
-/*
-void printCardInfo() {
-    // print the type of card
-  client.print("\nCard type: ");
-  switch (card.type()) {
-    case SD_CARD_TYPE_SD1:
-      client.println("SD1");
-      break;
-    case SD_CARD_TYPE_SD2:
-      client.println("SD2");
-      break;
-    case SD_CARD_TYPE_SDHC:
-      client.println("SDHC");
-      break;
-    default:
-      client.println("Unknown");
-  }
-
-  // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
-  if (!volume.init(card)) {
-    client.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
-    return;
-  }
-
-
-  // print the type and size of the first FAT-type volume
-  uint32_t volumesize;
-  client.print("\nVolume type is FAT");
-  client.println(volume.fatType(), DEC);
-  client.println();
-
-  volumesize = volume.blocksPerCluster();    // clusters are collections of blocks
-  volumesize *= volume.clusterCount();       // we'll have a lot of clusters
-  volumesize *= 512;                            // SD card blocks are always 512 bytes
-  client.print("Volume size (bytes): ");
-  client.println(volumesize);
-  client.print("Volume size (Kbytes): ");
-  volumesize /= 1024;
-  client.println(volumesize);
-  client.print("Volume size (Mbytes): ");
-  volumesize /= 1024;
-  client.println(volumesize);
-
-
-  client.println("\nFiles found on the card (name, date and size in bytes): ");
-  File root = SD.open("/");
-  printDirectory(root,0);
-
-//  root.openRoot(volume);
-//
-//  // list all files in the card with date and size
-//  root.ls(LS_R | LS_DATE | LS_SIZE);
-}
-
-void printDirectory(File dir, int numTabs)
-{
-  while (true)
-  {
-    File entry = dir.openNextFile();
-    if (! entry)
-    {
-      if (numTabs == 0)
-        client.println("** Done **");
-      return;
-    }
-    for (uint8_t i = 0; i < numTabs; i++)
-      client.print('\t');
-    client.print(entry.name());
-    if (entry.isDirectory())
-    {
-      client.println("/");
-      printDirectory(entry, numTabs + 1);
-    }
-    else
-    {
-      client.print("\t\t");
-      client.println(entry.size(), DEC);
-    }
-    entry.close();
-  }
-}
-*/
 

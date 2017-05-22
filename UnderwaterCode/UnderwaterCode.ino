@@ -32,12 +32,15 @@ SdFile root;
 
 int chipSelect = 4;
 File mySensorData;
+char name[13];
+
 
 float temp;
 float temp1;
 float Pressure;
 float altitude;
 float depth;
+long fileNum = 10000;
 
 /*void error(uint8_t errno) {
   while(1) {
@@ -54,6 +57,11 @@ float depth;
   }
 }
 */
+void incFileNum() { // generate next file name:
+  String s = "dat" + String(++fileNum) + ".txt";
+  s.toCharArray(name,13);
+}
+
 
 void setup() {
   
@@ -132,6 +140,12 @@ void setup() {
   Serial.print("ip:");
   Serial.println(Ethernet.localIP());
     */
+
+incFileNum();
+ while (SD.exists(name)) incFileNum();
+  Serial.println("new file name: " + String(name));
+  //--------------------------------------------------
+
 }
 
 /*
@@ -230,8 +244,10 @@ void loop() {
 
   //delay(1000);
   //write on SD card
-  
-  mySensorData= SD.open("Data.txt", FILE_WRITE);
+
+  mySensorData= SD.open(name, FILE_WRITE);
+
+ 
   
   if (mySensorData){
   
@@ -257,10 +273,10 @@ void loop() {
     mySensorData.print(altitude); 
     mySensorData.println(" m above mean sea level");
 
-//    digitalWrite(8,HIGH);
-//    delay(100);
-//    digitalWrite(8,LOW);
-//    delay(100);
+   digitalWrite(8,HIGH);
+   delay(100);
+   digitalWrite(8,LOW);
+   delay(100);
     
     mySensorData.close();
   
@@ -619,4 +635,3 @@ void printDirectory(File dir, int numTabs)
   }
 }
 */
-

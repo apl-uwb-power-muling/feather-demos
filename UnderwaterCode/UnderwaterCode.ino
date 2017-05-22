@@ -41,6 +41,7 @@ float Pressure;
 float altitude;
 float depth;
 long fileNum = 10000;
+int countingtime=0;
 
 /*void error(uint8_t errno) {
   while(1) {
@@ -67,7 +68,6 @@ void setup() {
   
   Serial.begin(9600);
   Serial.println("Starting");
-  
   Wire.begin();
 
   depthsensor.init();
@@ -104,6 +104,8 @@ void setup() {
   Serial.print("My IP address: ");
   Serial.println(Ethernet.localIP());
   Serial.print("\nWeb server is ready....\n");
+
+ 
 
   
   /*Serial.begin(115200);
@@ -218,29 +220,33 @@ void loop() {
   temp1=depthsensor.temperature();
   depth=depthsensor.depth();
   altitude=depthsensor.altitude();
+  countingtime=countingtime+millis()/1000;
 
  
-  Serial.print("Temperature(temperature sensor): ");
+  Serial.print("< Temperature(temperature sensor): ");
   Serial.print(temp); 
   Serial.println(" deg C");
-  Serial.println("---");
+  Serial.println("--- >");
 
-  Serial.print("Pressure: "); 
+  Serial.print("< Pressure: "); 
   Serial.print(Pressure); 
-  Serial.println(" mbar");
+  Serial.println(" mbar >");
   
-  Serial.print("Temperature(pressure sensor): "); 
+  Serial.print("< Temperature(pressure sensor): "); 
   Serial.print(temp1); 
-  Serial.println(" deg C");
+  Serial.println(" deg C >");
   
-  Serial.print("Depth: "); 
+  Serial.print("< Depth: "); 
   Serial.print(depth); 
-  Serial.println(" m");
+  Serial.println(" m  >");
   
-  Serial.print("Altitude: "); 
+  Serial.print("< Altitude: "); 
   Serial.print(altitude); 
-  Serial.println(" m above mean sea level");
+  Serial.println(" m above mean sea level >");
 
+  Serial.print("< Time: "); 
+  Serial.print(countingtime); 
+  Serial.println(" seconds (s) >");
 
   //write on SD card
 
@@ -250,27 +256,31 @@ void loop() {
   
   if (mySensorData){
   
-    mySensorData.print("Temperature(temperature sensor): ");
+    mySensorData.print("<Temperature(temperature sensor): ");
     mySensorData.print(temp); 
     mySensorData.println(" deg C");
-    mySensorData.println("---");
+    mySensorData.println("--->");
   
   
-    mySensorData.print("Pressure: "); 
+    mySensorData.print("< Pressure: "); 
     mySensorData.print(Pressure); 
-    mySensorData.println(" mbar");
+    mySensorData.println(" mbar>");
     
-    mySensorData.print("Temperature(pressure sensor): "); 
+    mySensorData.print("< Temperature(pressure sensor): "); 
     mySensorData.print(temp1); 
-    mySensorData.println(" deg C");
+    mySensorData.println(" deg C>");
     
-    mySensorData.print("Depth: "); 
+    mySensorData.print("< Depth: "); 
     mySensorData.print(depth); 
-    mySensorData.println(" m");
+    mySensorData.println(" m>");
     
-    mySensorData.print("Altitude: "); 
+    mySensorData.print("< Altitude: "); 
     mySensorData.print(altitude); 
-    mySensorData.println(" m above mean sea level");
+    mySensorData.println(" m above mean sea level>");
+
+    mySensorData.print("< Time: "); 
+    mySensorData.print(countingtime); 
+    mySensorData.println(" seconds (s) >");
 
    digitalWrite(8,HIGH);
    delay(100);
@@ -557,9 +567,4 @@ void webprintSensors() {
 
     client.println("<hr/>");
 }
-<<<<<<< HEAD
-*/
-=======
 
-
->>>>>>> origin/master

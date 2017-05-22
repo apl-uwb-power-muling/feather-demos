@@ -76,6 +76,5 @@ void loop() {
 #endif
 
   Serial.println("--- --- ---");
-    delay(1000);                       // wait for a second
-
+  delay(1000);                       // wait for a second
 }

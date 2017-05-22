@@ -66,7 +66,6 @@ void incFileNum() { // generate next file name:
 void setup() {
   
   Serial.begin(9600);
-  
   Serial.println("Starting");
   
   Wire.begin();
@@ -242,7 +241,7 @@ void loop() {
   Serial.print(altitude); 
   Serial.println(" m above mean sea level");
 
-  //delay(1000);
+
   //write on SD card
 
   mySensorData= SD.open(name, FILE_WRITE);
@@ -416,45 +415,19 @@ void loop() {
             //delay(100);
             File s = SD.open(path);
             if (s) {
-              webprintDirectory(s);
+              if( s.isDirectory() ) {
+                webprintDirectory(s);
+                client.println("<hr>");
+                webprintSensors();         
+              } else {
+                webprintFile(s);
+              }
             } else {
-              client.println(s);
-              s.rewindDirectory();
+              client.println("Error opening " + path + " : " + s);     // AMM, I think this is an error condition, so print an error message
+              //s.rewindDirectory();                                   // AMM probably don't need this.
               s.close();
             }
 
-             //depthsensor.read();
-for (int datashow=0; datashow>=0; datashow++){
-          client.print("\\\\\\Pressure: "); 
-          client.print(depthsensor.pressure()); 
-          client.println(" mbar ////////");
-  
-          client.print("\\\\\\\\ Temperature: "); 
-          client.print(depthsensor.temperature()); 
-          client.println(" deg C ////////");
-  
-          client.print("\\\\ Depth: "); 
-          client.print(depthsensor.depth()); 
-          client.println(" m//////");
-  
-          client.print("\\\\\\\\\\ Altitude: "); 
-          client.print(depthsensor.altitude()); 
-          client.println(" m above mean sea level/////////");
-
-          //delay(1000);
-
-          //tempsensor.read();
- 
-          client.print("\\\\\\ Temperature: ");
-          client.print(tempsensor.temperature()); 
-          client.println("deg C///////");
-   
-          client.println("---");
-
-          delay(1000);
-          }
-
-            //client.println("<p>" + fakename + "</p></body></html>");
             break;
           }
         }
@@ -479,15 +452,13 @@ for (int datashow=0; datashow>=0; datashow++){
 //*/
 
 
-  
+  // AMM Put one master delay at the end so we don't record data too fast
+  delay(1000);
   
 }
 
 
-void webprintDirectory(File dir) {
-  //判断是否为文件
-  if (!dir.isDirectory()) {
-
+void webprintFile(File dir) {
     if (path.indexOf('.') != -1) {
       //获取后缀名
       http_header("200 OK", path.substring(path.indexOf('.') + 1));
@@ -495,17 +466,23 @@ void webprintDirectory(File dir) {
       http_header("200 OK", "txt");//文件没有后缀名 默认显示文本格式
     }
     //读文件
+
+    // AMM.  Changed this so it reads/writes multiple bytes at a time.  Should be much faster
+    const int BUFFER_LENGTH = 4096;
+    char buffer[BUFFER_LENGTH];
     while (dir.available()) {
-      char sc = dir.read();
-      client.print(sc);
+      int charsRead = dir.read(buffer, BUFFER_LENGTH );
+      client.write( buffer, charsRead );
     }
     dir.close();
-    dir.rewindDirectory();
     return;//退出
-  }
+}
+
+void webprintDirectory( File dir ) {
+
   //判断不是文件
   http_header("200 OK", "htm");
-  client.print("<!DOCTYPE HTML><html><body><h1>200 Success</h1><br />PATH:" + path + "<hr />");
+  client.print("<!DOCTYPE HTML><html><body><h1>Tian Rules!</h1><br />PATH:" + path + "<hr />");
   dir.rewindDirectory();//索引回到第一个位置
   while (true) {
     File entry =  dir.openNextFile();
@@ -534,7 +511,6 @@ void webprintDirectory(File dir) {
   }
   client.println("<p>" + fakename + "</p></body></html>");
   dir.close();
-  delay(200);
 }
 
 void http_header(String statuscode, String filetype) {
@@ -553,85 +529,37 @@ void http_header(String statuscode, String filetype) {
   client.println("Connection: close");
   client.println();
 }
-/*
-void printCardInfo() {
-    // print the type of card
-  client.print("\nCard type: ");
-  switch (card.type()) {
-    case SD_CARD_TYPE_SD1:
-      client.println("SD1");
-      break;
-    case SD_CARD_TYPE_SD2:
-      client.println("SD2");
-      break;
-    case SD_CARD_TYPE_SDHC:
-      client.println("SDHC");
-      break;
-    default:
-      client.println("Unknown");
-  }
 
-  // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
-  if (!volume.init(card)) {
-    client.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
-    return;
-  }
+void webprintSensors() {
 
+//  AMM:  The way this is written, the program never gets out of this loop, it just keeps adding data to the web page.
+// By commenting out this for() statement, it shows the current data then finishes the web page
+//for (int datashow=0; datashow>=0; datashow++) {
+    client.print("<b>Pressure:</b> "); 
+    client.print(depthsensor.pressure()); 
+    client.println(" mbar <br/>");
 
-  // print the type and size of the first FAT-type volume
-  uint32_t volumesize;
-  client.print("\nVolume type is FAT");
-  client.println(volume.fatType(), DEC);
-  client.println();
+    client.print("<b>Temperature from pressure sensor:</b> "); 
+    client.print(depthsensor.temperature()); 
+    client.println(" deg C<br/>");
 
-  volumesize = volume.blocksPerCluster();    // clusters are collections of blocks
-  volumesize *= volume.clusterCount();       // we'll have a lot of clusters
-  volumesize *= 512;                            // SD card blocks are always 512 bytes
-  client.print("Volume size (bytes): ");
-  client.println(volumesize);
-  client.print("Volume size (Kbytes): ");
-  volumesize /= 1024;
-  client.println(volumesize);
-  client.print("Volume size (Mbytes): ");
-  volumesize /= 1024;
-  client.println(volumesize);
+    client.print("<b>Depth:</b> "); 
+    client.print(depthsensor.depth()); 
+    client.println(" m<br/>");
 
+    client.print("<b>Altitude:</b> "); 
+    client.print(depthsensor.altitude()); 
+    client.println(" m above mean sea level<br/><br/>");
 
-  client.println("\nFiles found on the card (name, date and size in bytes): ");
-  File root = SD.open("/");
-  printDirectory(root,0);
+    client.print("<b>Temperature sensor:</b> ");
+    client.print(tempsensor.temperature()); 
+    client.println("deg C<br/>");
 
-//  root.openRoot(volume);
-//
-//  // list all files in the card with date and size
-//  root.ls(LS_R | LS_DATE | LS_SIZE);
+    client.println("<hr/>");
 }
-
-void printDirectory(File dir, int numTabs)
-{
-  while (true)
-  {
-    File entry = dir.openNextFile();
-    if (! entry)
-    {
-      if (numTabs == 0)
-        client.println("** Done **");
-      return;
-    }
-    for (uint8_t i = 0; i < numTabs; i++)
-      client.print('\t');
-    client.print(entry.name());
-    if (entry.isDirectory())
-    {
-      client.println("/");
-      printDirectory(entry, numTabs + 1);
-    }
-    else
-    {
-      client.print("\t\t");
-      client.println(entry.size(), DEC);
-    }
-    entry.close();
-  }
-}
+<<<<<<< HEAD
 */
+=======
+
+
+>>>>>>> origin/master

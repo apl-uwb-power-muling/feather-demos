@@ -41,63 +41,66 @@ float Pressure;
 float altitude;
 float depth;
 long fileNum = 10000;
-int countingtime=0;
+unsigned long loopMillis = 0l;
 
-/*void error(uint8_t errno) {
-  while(1) {
-    uint8_t i;
-    for (i=0; i<errno; i++) {
-      digitalWrite(13, HIGH);
-      delay(100);
-      digitalWrite(13, LOW);
-      delay(100);
-    }
-    for (i=errno; i<10; i++) {
-      delay(200);
-    }
-  }
-}
-*/
+
+
 void incFileNum() { // generate next file name:
-  String s = "dat" + String(++fileNum) + ".txt";
-  s.toCharArray(name,13);
+
+  //AMM:   A bit of C voodoo.  Does the same thing _but_ will make the number portion five
+  // characters wide and will add 0s to make it 5 characters wide, for example:
+  //     dat00010.txt
+  //     dat00011.txt
+  // ....
+  // This makes it easier to put the filenames in order (thought with fileNum=10000, 
+  // they'll be in order anyway)
+  snprintf( name, 13, "dat%05d.txt", ++fileNum );
+  
+//  String s = "dat" + String(++fileNum) + ".txt";
+//  s.toCharArray(name,13);
 }
 
 
 void setup() {
   
-  Serial.begin(9600);
-  Serial.println("Starting");
-  Wire.begin();
-
-  depthsensor.init();
-  tempsensor.init();
-  
-  depthsensor.setFluidDensity(1029); // kg/m^3 (997 freshwater, 1029 for seawater)
-  SD.begin(chipSelect) ;
-
-  
   Serial.begin(115200);
+  Serial.println("Starting");
+
+  //Serial.begin(115200);
   int count = 0;
   const int SERIAL_TIMEOUT = 1000;
   while (!Serial && count++ < SERIAL_TIMEOUT ) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  Serial.print("Hello, I am the Ethernet Featherwing!\n");
+  Serial.println("Initializing depth and pressure sensors");
+  
+  Wire.begin();
+
+  depthsensor.init();
+  tempsensor.init();
+  
+  depthsensor.setFluidDensity(1029); // kg/m^3 (997 freshwater, 1029 for seawater)
+  
+  Serial.println("Initializing SD card...");
+  
+  SD.begin(chipSelect) ;
 
   if (!card.init(SPI_HALF_SPEED, SD_CS)) {
     Serial.println("Failed to initialize SD card");
-    //error(2);
   }
   
+
+  //Serial.print("Hello, I am the Ethernet Featherwing!\n");
+
+
   // start the Ethernet connection:
   //if (Ethernet.begin(mac) == 0) {
     //Serial.println("Failed to configure Ethernet using DHCP");
     
     // Use the pre-configured address instead
     // try to congifure using IP address instead of DHCP:
-    Ethernet.begin(mac, ip);
+  Ethernet.begin(mac, ip);
   //}
   
   // print the Ethernet board/shield's IP address:
@@ -141,11 +144,19 @@ void setup() {
   Serial.print("ip:");
   Serial.println(Ethernet.localIP());
     */
-
-incFileNum();
- while (SD.exists(name)) incFileNum();
+    
+  // Need to call this once to set 'name'
+  incFileNum();
+  while (SD.exists(name)) incFileNum();
   Serial.println("new file name: " + String(name));
+  
   //--------------------------------------------------
+
+  // Put a header in the file
+  mySensorData= SD.open(name, FILE_WRITE);
+  mySensorData.println("# elapsed_milliseconds,temp_c,pressure_mbar,temp_from_pressure_c,depth_m,altitude_m");
+
+  mySensorData.close();
 
 }
 
@@ -220,9 +231,11 @@ void loop() {
   temp1=depthsensor.temperature();
   depth=depthsensor.depth();
   altitude=depthsensor.altitude();
-  countingtime=countingtime+millis()/1000;
 
- 
+  // Get the milliseconds since the Arduino turned on:
+  //   https://www.arduino.cc/en/Reference/Millis
+  loopMillis = millis();
+  
   Serial.print("< Temperature(temperature sensor): ");
   Serial.print(temp); 
   Serial.println(" deg C");
@@ -245,47 +258,65 @@ void loop() {
   Serial.println(" m above mean sea level >");
 
   Serial.print("< Time: "); 
-  Serial.print(countingtime); 
+  Serial.print(loopMillis/1000.0); 
   Serial.println(" seconds (s) >");
 
   //write on SD card
 
   mySensorData= SD.open(name, FILE_WRITE);
 
- 
-  
   if (mySensorData){
-  
-    mySensorData.print("<Temperature(temperature sensor): ");
-    mySensorData.print(temp); 
-    mySensorData.println(" deg C");
-    mySensorData.println("--->");
-  
-  
-    mySensorData.print("< Pressure: "); 
-    mySensorData.print(Pressure); 
-    mySensorData.println(" mbar>");
-    
-    mySensorData.print("< Temperature(pressure sensor): "); 
-    mySensorData.print(temp1); 
-    mySensorData.println(" deg C>");
-    
-    mySensorData.print("< Depth: "); 
-    mySensorData.print(depth); 
-    mySensorData.println(" m>");
-    
-    mySensorData.print("< Altitude: "); 
-    mySensorData.print(altitude); 
-    mySensorData.println(" m above mean sea level>");
 
-    mySensorData.print("< Time: "); 
-    mySensorData.print(countingtime); 
-    mySensorData.println(" seconds (s) >");
+    if( true ) {
+      // AMM:   Aaron's version which saves CSV to the SD card.
+      // To use this, set above to "if( true ) { ...."
+      // otherwise set to "if( false ) { ...."
 
-   digitalWrite(8,HIGH);
-   delay(100);
-   digitalWrite(8,LOW);
-   delay(100);
+      mySensorData.print((unsigned long)loopMillis);
+      mySensorData.print(',');
+      mySensorData.print(temp); 
+      mySensorData.print(',');
+      mySensorData.print(Pressure); 
+      mySensorData.print(',');
+      mySensorData.print(temp1); 
+      mySensorData.print(',');
+      mySensorData.print(depth); 
+      mySensorData.print(',');
+      mySensorData.println(altitude); 
+      
+    } else {
+  
+      mySensorData.print("<Temperature(temperature sensor): ");
+      mySensorData.print(temp); 
+      mySensorData.println(" deg C");
+      mySensorData.println("--->");
+  
+  
+      mySensorData.print("< Pressure: "); 
+      mySensorData.print(Pressure); 
+      mySensorData.println(" mbar>");
+    
+      mySensorData.print("< Temperature(pressure sensor): "); 
+      mySensorData.print(temp1); 
+      mySensorData.println(" deg C>");
+    
+      mySensorData.print("< Depth: "); 
+      mySensorData.print(depth); 
+      mySensorData.println(" m>");
+    
+      mySensorData.print("< Altitude: "); 
+      mySensorData.print(altitude); 
+      mySensorData.println(" m above mean sea level>");
+
+      mySensorData.print("< Time: "); 
+      mySensorData.print(loopMillis/1000.0); 
+      mySensorData.println(" seconds (s) >");
+
+      digitalWrite(8,HIGH);
+      delay(100);
+      digitalWrite(8,LOW);
+      delay(100);
+    }
     
     mySensorData.close();
   
@@ -542,9 +573,10 @@ void http_header(String statuscode, String filetype) {
 
 void webprintSensors() {
 
-//  AMM:  The way this is written, the program never gets out of this loop, it just keeps adding data to the web page.
-// By commenting out this for() statement, it shows the current data then finishes the web page
-//for (int datashow=0; datashow>=0; datashow++) {
+    client.print("<b>Milliseconds:</b> "); 
+    client.print(loopMillis); 
+    client.println(" msec <br/>");
+
     client.print("<b>Pressure:</b> "); 
     client.print(depthsensor.pressure()); 
     client.println(" mbar <br/>");

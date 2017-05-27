@@ -40,6 +40,7 @@ float temp1;
 float Pressure;
 float altitude;
 float depth;
+float time11;
 long fileNum = 10000;
 unsigned long loopMillis = 0l;
 
@@ -154,7 +155,9 @@ void setup() {
 
   // Put a header in the file
   mySensorData= SD.open(name, FILE_WRITE);
-  mySensorData.println("# elapsed_milliseconds,temp_c,pressure_mbar,temp_from_pressure_c,depth_m,altitude_m");
+  //mySensorData.println("# elapsed_milliseconds,temp_c,pressure_mbar,temp_from_pressure_c,depth_m,altitude_m");
+  
+  mySensorData.println("# seconds,temp_c,pressure_mbar,temp_from_pressure_c,depth_m,altitude_m");
 
   mySensorData.close();
 
@@ -231,7 +234,7 @@ void loop() {
   temp1=depthsensor.temperature();
   depth=depthsensor.depth();
   altitude=depthsensor.altitude();
-
+  time11=loopMillis/1000.0;
   // Get the milliseconds since the Arduino turned on:
   //   https://www.arduino.cc/en/Reference/Millis
   loopMillis = millis();
@@ -258,7 +261,7 @@ void loop() {
   Serial.println(" m above mean sea level >");
 
   Serial.print("< Time: "); 
-  Serial.print(loopMillis/1000.0); 
+  Serial.print(time11); 
   Serial.println(" seconds (s) >");
 
   //write on SD card
@@ -272,7 +275,8 @@ void loop() {
       // To use this, set above to "if( true ) { ...."
       // otherwise set to "if( false ) { ...."
 
-      mySensorData.print((unsigned long)loopMillis);
+      //mySensorData.print((unsigned long)loopMillis);
+      mySensorData.print(time11);
       mySensorData.print(',');
       mySensorData.print(temp); 
       mySensorData.print(',');

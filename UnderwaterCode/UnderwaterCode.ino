@@ -44,6 +44,15 @@ float time11;
 long fileNum = 10000;
 unsigned long loopMillis = 0l;
 
+const int NUM_ANALOG_IN = 4;
+unsigned int analog[NUM_ANALOG_IN]; 
+
+const int VBATT_ANALOG_IN = 0;
+const float R1 = 5.6;   //MOhm
+const float R2 = 1.15;   //MOhm
+const float VBATT_MULT = 3.3 / 1024 * (R1+R2)/R2;
+float vbatt;
+
 
 
 void incFileNum() { // generate next file name:
@@ -157,7 +166,13 @@ void setup() {
   mySensorData= SD.open(name, FILE_WRITE);
   //mySensorData.println("# elapsed_milliseconds,temp_c,pressure_mbar,temp_from_pressure_c,depth_m,altitude_m");
   
-  mySensorData.println("# seconds,temp_c,pressure_mbar,temp_from_pressure_c,depth_m,altitude_m");
+  mySensorData.print("# seconds,temp_c,pressure_mbar,temp_from_pressure_c,depth_m,altitude_m");
+
+  for( int i = 0; i < NUM_ANALOG_IN; ++i ) {
+    mySensorData.print(",analog_");
+    mySensorData.print(i);
+  }
+  mySensorData.println();
 
   mySensorData.close();
 
@@ -197,6 +212,13 @@ void loop() {
 
   depthsensor.read();
   tempsensor.read();
+
+  for( byte i = 0; i < NUM_ANALOG_IN; ++i ) {
+    analog[i] = analogRead(i);
+  }
+
+  // Do this expensive calculation once
+  vbatt = analog[VBATT_ANALOG_IN] * VBATT_MULT;
 
 /*
   Serial.print("Pressure: "); 
@@ -264,6 +286,17 @@ void loop() {
   Serial.print(time11); 
   Serial.println(" seconds (s) >");
 
+  Serial.print("< VBatt: ");
+  Serial.print(  vbatt );
+  Serial.println(" Volts >");
+
+  Serial.print("Analog values (raw): ");
+  for( int i = 0; i < NUM_ANALOG_IN; ++i ) {
+    Serial.print( analog[i] );
+    Serial.print( " " );
+  }
+  Serial.println("");
+
   //write on SD card
 
   mySensorData= SD.open(name, FILE_WRITE);
@@ -286,7 +319,13 @@ void loop() {
       mySensorData.print(',');
       mySensorData.print(depth); 
       mySensorData.print(',');
-      mySensorData.println(altitude); 
+      mySensorData.print(altitude); 
+
+      for( int i = 0; i < NUM_ANALOG_IN; ++i ) {
+        mySensorData.print(',');
+        mySensorData.print( analog[i] );
+      }
+      mySensorData.println("");
       
     } else {
   
@@ -505,8 +544,10 @@ void loop() {
 
 void webprintFile(File file) {
 
-      char httpHeader[64];
-      snprintf(httpHeader,64,"200 OK\nContent-Length: %d", file.size());
+    //AMM: Return the content length, too.   Might make it work better when downloading 
+    // big files. 
+    char httpHeader[64];
+    snprintf(httpHeader,64,"200 OK\nContent-Length: %d", file.size());
  
     if (path.indexOf('.') != -1) {
       //获取后缀名
@@ -604,6 +645,17 @@ void webprintSensors() {
     client.print("<b>Temperature sensor:</b> ");
     client.print(tempsensor.temperature()); 
     client.println("deg C<br/>");
+
+  client.print("<b>Battery voltage:</b> ");
+  client.print( vbatt );
+  client.println("<br/>");
+
+    client.print("<b>Raw analog values:</b> " );
+    for( int i = 0; i < NUM_ANALOG_IN; ++i ) {
+      client.print(analog[i]);
+      client.print(' ' );
+    }
+    client.println("<br/>");
 
     client.println("<hr/>");
 }

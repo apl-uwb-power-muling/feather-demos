@@ -503,23 +503,27 @@ void loop() {
 }
 
 
-void webprintFile(File dir) {
+void webprintFile(File file) {
+
+      char httpHeader[64];
+      snprintf(httpHeader,64,"200 OK\nContent-Length: %d", file.size());
+ 
     if (path.indexOf('.') != -1) {
       //获取后缀名
-      http_header("200 OK", path.substring(path.indexOf('.') + 1));
-    } else {
-      http_header("200 OK", "txt");//文件没有后缀名 默认显示文本格式
+      http_header(httpHeader, path.substring(path.indexOf('.') + 1));
+    } else {      
+      http_header(httpHeader, "txt");//文件没有后缀名 默认显示文本格式
     }
     //读文件
 
     // AMM.  Changed this so it reads/writes multiple bytes at a time.  Should be much faster
-    const int BUFFER_LENGTH = 4096;
+    const int BUFFER_LENGTH = 256;
     char buffer[BUFFER_LENGTH];
-    while (dir.available()) {
-      int charsRead = dir.read(buffer, BUFFER_LENGTH );
+    while (file.available()) {
+      int charsRead = file.read(buffer, BUFFER_LENGTH );
       client.write( buffer, charsRead );
     }
-    dir.close();
+    file.close();
     return;//退出
 }
 
